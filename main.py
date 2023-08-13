@@ -25,10 +25,11 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 # Sample user model
-class User:
-    def __init__(self, username, password):
-        self.username = username
-        self.password = password
+class UserInput(BaseModel):
+    username: str
+    password: str
+    refresh_token: str = None  # Include refresh token field
+
 
 class CreateModule(BaseModel):
     title: str
@@ -106,6 +107,29 @@ def get_db():
     finally:
         db.close()
 
+def create_tokens(username: str):
+    access_token = create_access_token(username)
+    refresh_token = create_refresh_token(username)
+    return access_token, refresh_token
+
+def create_refresh_token(username: str):
+    payload = {
+        "sub": username,
+        "exp": datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS),
+    }
+    return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+
+def verify_refresh_token(token: str):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username = payload["sub"]
+        return username
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Refresh token expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid refresh token")
+
+
 # Generate access token
 def create_access_token(username: str):
     payload = {
@@ -151,22 +175,38 @@ def register(username: str, password: str, is_admin: bool = False, session: Sess
 
 # Login and generate access token
 @app.post("/login")
-def login(username: str, password: str, session: Session = Depends(get_db)):
-    user = session.query(User).filter_by(username=username).first()
-    if not user:
+def login(user_data: UserInput, session: Session = Depends(get_db)):
+    user = session.query(User).filter_by(username=user_data.username).first()
+    if not user or not verify_password(user_data.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Invalid username or password")
 
-    if not verify_password(password, user.password_hash):
-        raise HTTPException(status_code=401, detail="Invalid username or password")
+    access_token, refresh_token = create_tokens(user_data.username)
+    return {"access_token": access_token, "refresh_token": refresh_token}
 
-    access_token = create_access_token(username)
-    return {"access_token": access_token}
 
 # Dependency function to verify access token and extract user information
 def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
-    username = verify_token(token)
-    return username
+    try:
+        username = verify_token(token)
+        return username
+    except HTTPException as e:
+        if "Token expired" in e.detail:
+            raise HTTPException(status_code=401, detail="Access token expired")
+        elif "Invalid token" in e.detail:
+            refresh_token = credentials.credentials
+            try:
+                username = verify_refresh_token(refresh_token)
+                return username
+            except HTTPException:
+                raise HTTPException(status_code=401, detail="Invalid access/refresh token")
+
+
+@app.post("/refresh")
+def refresh_tokens(refresh_token: str):
+    username = verify_refresh_token(refresh_token)
+    access_token, new_refresh_token = create_tokens(username)
+    return {"access_token": access_token, "refresh_token": new_refresh_token}
 
 @app.post("/process-module")
 def process_module(request_data: ModuleRequest, user: str = Depends(get_current_user), session: Session = Depends(get_db)):
