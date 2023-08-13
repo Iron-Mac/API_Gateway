@@ -255,7 +255,8 @@ def process_module(request_data: ModuleRequest, user: str = Depends(get_current_
         except ValueError:
             return {"error": "Failed to parse the JSON response from the module."}
     else:
-        return {"error": "Failed to process the module request."}
+        error_message = str(requests.exceptions.RequestException)
+        return {"error": error_message}
 
 @app.post("/set-rate-limit")
 def set_rate_limit(rate_limit_data: SetRateLimit, admin_user: str = Depends(get_current_user), session: Session = Depends(get_db)):
