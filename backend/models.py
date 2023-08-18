@@ -5,6 +5,7 @@ import time
 
 Base = declarative_base()
 
+
 class Module(Base):
     __tablename__ = "modules"
 
@@ -15,6 +16,7 @@ class Module(Base):
     url = Column(String)
 
     creator = relationship("User", back_populates="modules")
+
 
 class User(Base):
     __tablename__ = "users"

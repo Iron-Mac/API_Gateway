@@ -8,10 +8,12 @@ import random
 
 router = APIRouter()
 
+
 # Store the verification code in Redis
 def store_verification_code(username: str, verification_code: str):
     redis_conn.set(f"verification_code:{username}", verification_code)
     redis_conn.expire(f"verification_code:{username}", 3600)  # Set expiration time (1 hour) for the code
+
 
 # Verify the verification code from Redis
 def verify_verification_code(username: str, verification_code: str):
@@ -23,8 +25,10 @@ def verify_verification_code(username: str, verification_code: str):
     # Remove the cached verification code from Redis
     redis_conn.delete(redis_key)
 
+
 def generate_verification_code():
     return str(random.randint(1000, 9999))
+
 
 # Register a new user
 @router.post("/register")
@@ -41,9 +45,10 @@ def register(user_data: UserInput, session: Session = Depends(get_db)):
 
     # Create a list to store user modules
     user.modules = []
-    
+
     session.commit()
     return {"message": "User registered successfully"}
+
 
 # Login and generate access token
 @router.post("/login")
@@ -55,13 +60,15 @@ def login(user_data: UserInput, session: Session = Depends(get_db)):
     access_token, refresh_token = create_tokens(user_data.username)
     return {"access_token": access_token, "refresh_token": refresh_token}
 
+
 @router.post("/refresh")
 def refresh_tokens(refresh_token: str):
     username = verify_refresh_token(refresh_token)
     access_token, new_refresh_token = create_tokens(username)
     return {"access_token": access_token, "refresh_token": new_refresh_token}
 
-@app.post("/verify-user")
+
+@router.post("/verify-user")
 def verify_email(username: str, verification_code: str, session: Session = Depends(get_db)):
     user = session.query(User).filter_by(username=username).first()
     if not user:

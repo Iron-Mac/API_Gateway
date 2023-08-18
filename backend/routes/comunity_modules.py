@@ -5,8 +5,10 @@ import requests
 from security import verify_token, get_current_user
 from models import User, Module, UserModule
 from schemas import ModuleRequest, SetRateLimit, AddModuleToUser, CreateModule
+import time
 
 router = APIRouter()
+
 
 @router.post("/process-module")
 def process_module(request_data: ModuleRequest, user: str = Depends(get_current_user), session: Session = Depends(get_db)):
@@ -58,6 +60,7 @@ def process_module(request_data: ModuleRequest, user: str = Depends(get_current_
         error_message = str(requests.exceptions.RequestException)
         return {"error": error_message}
 
+
 @router.post("/set-rate-limit")
 def set_rate_limit(rate_limit_data: SetRateLimit, admin_user: str = Depends(get_current_user), session: Session = Depends(get_db)):
     admin_db = session.query(User).filter_by(username=admin_user).first()
@@ -83,6 +86,7 @@ def set_rate_limit(rate_limit_data: SetRateLimit, admin_user: str = Depends(get_
 
     return {"message": "Rate limit updated successfully"}
 
+
 # Example of adding a module to a user's list of modules
 @router.post("/add-module-to-user")
 def add_module_to_user(module_data: AddModuleToUser, admin_user: str = Depends(get_current_user), session: Session = Depends(get_db)):
@@ -105,6 +109,7 @@ def add_module_to_user(module_data: AddModuleToUser, admin_user: str = Depends(g
 
     return {"message": "Module added to user successfully"}
 
+
 @router.post("/create-module")
 def create_module(module_data: CreateModule, user: str = Depends(get_current_user), session: Session = Depends(get_db)):
     user_db = session.query(User).filter_by(username=user).first()
@@ -119,7 +124,7 @@ def create_module(module_data: CreateModule, user: str = Depends(get_current_use
         url=module_data.url
     )
     session.add(new_module)
-    
+
     # Create a UserModule instance to store rate limit for the module and user
     user_module = UserModule(user_id=user_db.id, module_id=new_module.id, limit=module_data.limit, tokens=module_data.limit)
 
@@ -130,4 +135,3 @@ def create_module(module_data: CreateModule, user: str = Depends(get_current_use
     session.commit()
 
     return {"message": "Module created successfully", "module_id": new_module.id}
-

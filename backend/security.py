@@ -14,10 +14,12 @@ security = HTTPBearer()
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+
 def create_tokens(username: str):
     access_token = create_access_token(username)
     refresh_token = create_refresh_token(username)
     return access_token, refresh_token
+
 
 def create_refresh_token(username: str):
     payload = {
@@ -25,6 +27,7 @@ def create_refresh_token(username: str):
         "exp": datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS),
     }
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+
 
 def verify_refresh_token(token: str):
     try:
@@ -45,6 +48,7 @@ def create_access_token(username: str):
     }
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
+
 # Verify access token
 def verify_token(token: str):
     try:
@@ -56,13 +60,16 @@ def verify_token(token: str):
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail="Invalid token")
 
+
 # Hash password
 def get_password_hash(password: str):
     return pwd_context.hash(password)
 
+
 # Verify password
 def verify_password(plain_password: str, hashed_password: str):
     return pwd_context.verify(plain_password, hashed_password)
+
 
 # Dependency function to verify access token and extract user information
 def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
@@ -80,4 +87,3 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
                 return username
             except HTTPException:
                 raise HTTPException(status_code=401, detail="Invalid access/refresh token")
-
