@@ -23,6 +23,7 @@ DATABASE_URL = "sqlite:///./test.db"  # SQLite database URL
 SECRET_KEY = "your-secret-key"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
+REFRESH_TOKEN_EXPIRE_DAYS = 15
 
 # Sample user model
 class UserInput(BaseModel):
@@ -159,12 +160,12 @@ def verify_password(plain_password: str, hashed_password: str):
 
 # Register a new user
 @app.post("/register")
-def register(username: str, password: str, is_admin: bool = False, session: Session = Depends(get_db)):
-    if session.query(User).filter_by(username=username).first():
+def register(user_data: UserInput, session: Session = Depends(get_db)):
+    if session.query(User).filter_by(username=user_data.username).first():
         raise HTTPException(status_code=400, detail="Username already registered")
 
-    hashed_password = get_password_hash(password)
-    user = User(username=username, password_hash=hashed_password, is_admin=is_admin, url_token_buckets={})
+    hashed_password = get_password_hash(user_data.password)
+    user = User(username=user_data.username, password_hash=hashed_password, is_admin=False, url_token_buckets={})
     session.add(user)
 
     # Create a list to store user modules
