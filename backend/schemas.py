@@ -4,6 +4,7 @@ from pydantic import BaseModel
 class UserInput(BaseModel):
     username: str
     password: str
+    phone_number: str
     refresh_token: str = None  # Include refresh token field
 
 
@@ -33,6 +34,21 @@ class SetRateLimit(BaseModel):
     limit: int
 
 
+class LoginInput(BaseModel):
+    username: str
+    password: str
+
+
+class ModuleDeleteRequest(BaseModel):
+    module_id: int
+
+
 class AddModuleToUser(BaseModel):
     username: str
     module_id: int
+
+
+class ResetPasswordInput(BaseModel):
+    phone_number: str
+    verification_code: str
+    new_password: str

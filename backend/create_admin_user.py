@@ -9,7 +9,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def create_admin_user(db: Session, username: str, password: str):
     hashed_password = pwd_context.hash(password)
-    admin_user = User(username=username, password_hash=hashed_password, is_admin=True)
+    admin_user = User(username=username, password_hash=hashed_password, is_admin=True, is_verified=True)
     db.add(admin_user)
     db.commit()
 
@@ -20,8 +20,9 @@ def main():
     # Take admin username and password from the user
     admin_username = input("Enter admin username: ")
     admin_password = input("Enter admin password: ")
+    admin_phone_number = input("Enter admin phone_number: ")
 
-    create_admin_user(db, admin_username, admin_password)
+    create_admin_user(db, admin_username, admin_password, admin_phone_number)
     db.close()
     print(f"Admin user '{admin_username}' created successfully.")
 

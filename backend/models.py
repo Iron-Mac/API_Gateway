@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, JSON, Float
+from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, Float
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 import time
@@ -24,10 +24,10 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, index=True)
     password_hash = Column(String)
+    phone_number = Column(String, unique=True, index=True)
     is_admin = Column(Boolean, default=False)
     is_verified = Column(Boolean, default=False)
-    url_token_buckets = Column(JSON)
-    modules = relationship("Module", secondary="user_module", back_populates="users")
+    modules = relationship("Module", secondary="user_module", back_populates="creator")
 
 
 class UserModule(Base):
