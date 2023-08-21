@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, Float
+from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, Float, DateTime, CheckConstraint
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 import time
@@ -14,8 +14,8 @@ class Module(Base):
     title = Column(String, index=True)
     description = Column(String)
     url = Column(String)
-
-    creator = relationship("User", back_populates="modules")
+    output_type = Column(Integer, CheckConstraint('output_type >= 1 AND output_type <= 2'), nullable=False)
+    creator = relationship("User", secondary="user_module", back_populates="modules")
 
 
 class User(Base):
@@ -26,6 +26,7 @@ class User(Base):
     password_hash = Column(String)
     phone_number = Column(String, unique=True, index=True)
     is_admin = Column(Boolean, default=False)
+    is_registerer = Column(Boolean, default=False)
     is_verified = Column(Boolean, default=False)
     modules = relationship("Module", secondary="user_module", back_populates="creator")
 
@@ -38,3 +39,4 @@ class UserModule(Base):
     limit = Column(Integer, default=0)
     tokens = Column(Float, default=0.0)
     last_refill = Column(Float, default=time.time())
+    expire_time = Column(DateTime)

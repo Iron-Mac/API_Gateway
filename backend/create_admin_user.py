@@ -7,9 +7,9 @@ from passlib.context import CryptContext
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
-def create_admin_user(db: Session, username: str, password: str):
+def create_admin_user(db: Session, username: str, password: str, phone_number: str):
     hashed_password = pwd_context.hash(password)
-    admin_user = User(username=username, password_hash=hashed_password, is_admin=True, is_verified=True)
+    admin_user = User(username=username, password_hash=hashed_password, phone_number=phone_number, is_admin=True, is_registerer=True, is_verified=True)
     db.add(admin_user)
     db.commit()
 

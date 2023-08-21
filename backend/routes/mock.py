@@ -15,4 +15,4 @@ def mock(request_data: Input1, user: str = Depends(get_current_user), session: S
     user_db = session.query(User).filter_by(username=user).first()
     if not user_db:
         raise HTTPException(status_code=401, detail="Invalid user")
-    return {"result" : f"this is mock object for summerizer: {request_data.input_data}"}
+    return {"result": f"this is mock object for summerizer: {request_data.input_data}"}

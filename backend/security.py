@@ -3,6 +3,10 @@ import jwt
 from datetime import datetime, timedelta
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from fastapi import Depends, HTTPException
+from sqlalchemy.orm import Session
+
+from database import get_db
+from models import User
 
 
 SECRET_KEY = "your-secret-key"
@@ -87,3 +91,12 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
                 return username
             except HTTPException:
                 raise HTTPException(status_code=401, detail="Invalid access/refresh token")
+            
+
+def get_admin_user(user: str = Depends(get_current_user), session: Session = Depends(get_db)):
+    # Implement this function
+    admin_db = session.query(User).filter_by(username=user).first()
+    if not admin_db or not admin_db.is_admin:
+        raise HTTPException(status_code=403, detail="Access forbidden for non-admin users")
+    else:
+        return user
