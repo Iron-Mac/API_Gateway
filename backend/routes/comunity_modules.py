@@ -34,12 +34,12 @@ def process_module(request_data: ModuleRequest, user: str = Depends(get_current_
             user_module.last_refill = now
             session.commit()
 
-        if user_module.tokens <= 0:
-            raise HTTPException(status_code=429, detail="محدودیت نرخ برای این ماژول تجاوز شده است. لطفاً بعداً دوباره امتحان کنید.")
-
         # Check if expire_time is valid and not expired
         if user_module.expire_time and user_module.expire_time <= datetime.now():
             raise HTTPException(status_code=403, detail="زمان اعتبار ماژول منقضی شده است")
+        
+        if user_module.tokens <= 0:
+            raise HTTPException(status_code=429, detail="محدودیت نرخ برای این ماژول تجاوز شده است. لطفاً بعداً دوباره امتحان کنید.")
 
         user_module.tokens -= 1
         session.commit()
@@ -106,6 +106,10 @@ def set_rate_limit(rate_limit_data: SetRateLimit, admin_user: str = Depends(get_
     if rate_limit_data.expire_time < datetime.now():
         raise HTTPException(status_code=400, detail="زمان انقضا باید در آینده باشد")
 
+    # Check if the module is already associated with the target user
+    if module not in target_user.modules:
+        target_user.modules.append(module)
+        session.commit()
     user_module = session.query(UserModule).filter_by(user_id=target_user.id, module_id=module.id).first()
 
     if not user_module:
