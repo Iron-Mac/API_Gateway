@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 import redis
 from sqlalchemy.orm import Session
 from database import get_db, get_redis_connection
-from security import create_tokens, verify_refresh_token, get_password_hash, verify_password
+from security import create_tokens, get_current_user, verify_refresh_token, get_password_hash, verify_password
 from models import User
 from schemas import UserInput, ResetPasswordInput, LoginInput, UserCodeVerification
 import random
@@ -22,9 +22,6 @@ def verify_verification_code(redis_conn: redis.StrictRedis, username: str, verif
     cached_verification_code = redis_conn.get(redis_key)
     if not cached_verification_code or cached_verification_code.decode("utf-8") != verification_code:
         raise HTTPException(status_code=400, detail="کد وارد شده نادرست است")
-
-    # Remove the cached verification code from Redis
-    redis_conn.delete(redis_key)
 
 
 def generate_verification_code():
@@ -114,3 +111,18 @@ def reset_password(user_input: ResetPasswordInput, redis_conn: redis.StrictRedis
     session.commit()
 
     return {"message": "Password reset successful"}
+
+
+@router.get("/retreive-user")
+def get_user_data(user: str = Depends(get_current_user), session: Session = Depends(get_db)):
+    user = session.query(User).filter_by(username=user.username).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="کاربر پیدا نشد")
+
+    return {
+        "id": user.id,
+        "username": user.username,
+        "phone_number": user.phone_number,
+        "admin": user.is_admin,
+        "registerer": user.is_registerer
+    }

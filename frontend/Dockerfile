@@ -8,6 +8,12 @@ RUN npm install
 
 COPY . .
 
-EXPOSE 5173
+# Build the Vue app
+RUN npm run build
 
-CMD ["npm", "run", "dev"]
+# Make port 80 available to the world outside this container
+EXPOSE 8080
+
+# Serve the Vue app with a simple HTTP server
+CMD ["npm", "run", "serve"]
+

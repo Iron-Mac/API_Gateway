@@ -91,7 +91,7 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
                 return username
             except HTTPException:
                 raise HTTPException(status_code=401, detail="Invalid access/refresh token")
-            
+
 
 def get_admin_user(user: str = Depends(get_current_user), session: Session = Depends(get_db)):
     # Implement this function

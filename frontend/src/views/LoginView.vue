@@ -34,22 +34,30 @@
             </div>
         </div>
     </div>
+    <msg v-if="showMsg" @endmsg="endmsg" :msg="err"/>
 </template>
 
 <script>
 import axios from 'axios';
+import msg from '../components/msg.vue'
 
 export default {
+    components : {msg},
     data() {
         return {
             username : '',
             email : '',
             pass : '',
             code : '',
-            accessToken : ''
+            accessToken : '',
+            showMsg : false,
+            err : ''
         }
     },
     methods : {
+        endmsg() {
+            this.showMsg = false
+        },
         toggleSignup() {
             document.getElementById('loginTab').classList.remove('border-bottom');
             document.getElementById('signupTab').classList.add('border-bottom');
@@ -72,15 +80,17 @@ export default {
                     "phone_number": this.email
                 }
                 console.log(data)
-                document.getElementById('loginsec').classList.remove('none');
-                    document.getElementById('loginFirst').classList.add('none');
                 await axios.post('http://localhost:8000/register',data)
                 .then(res => {
                     console.log(res.data)
                     document.getElementById('loginsec').classList.remove('none');
                     document.getElementById('loginFirst').classList.add('none');
+                    document.getElementById('loginsec').classList.remove('none');
+                    document.getElementById('loginFirst').classList.add('none');
                 })
                 .catch(err=> {
+                    this.err = err.response.data.detail;
+                    this.showMsg = true;
                     console.log(err)
                 })
             }
@@ -97,6 +107,8 @@ export default {
                 window.location.href = "http://localhost:5173/";
             })
             .catch(err=> {
+                this.err = err.response.data.detail;
+                this.showMsg = true;
                 console.log(err)
             })
         },
@@ -113,13 +125,18 @@ export default {
                 this.$store.state.refreshToken = res.data['refresh_token']
                 this.$store.commit('saveAccessToken',this.$store.state.accessToken);
                 this.$store.commit('saveRefreshToken',this.$store.state.refreshToken);
-                window.location.href = "http://localhost:5173/"
+                window.location.href = "http://localhost:5173/list"
             })
             .catch(err=> {
                 console.log(err)
+                this.err = err.response.data.detail;
+                this.showMsg = true;
             })
         }
     },
+    beforeMount() {
+        document.title = "ورود/ثبت نام";
+    }
     
 }
 </script>
@@ -187,7 +204,7 @@ export default {
     right: 70px;
     left: 0;
     bottom: 0;
-    background-color: #eeeeee;
+    background-color: #efede6;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -220,7 +237,7 @@ export default {
 .submit {
     width: 306px;
     height: 67px;
-    background: #1bb140;
+    background: #009879;
     border-radius: 50px;
     border: none;
     margin: 28px 105px;
@@ -232,7 +249,7 @@ export default {
 }
 
 .submit:hover {
-    background-color:#0edd42;
+    background-color:#095143;
 }
 
 .msg {

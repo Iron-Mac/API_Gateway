@@ -3,7 +3,12 @@ import { RouterView } from 'vue-router'
 </script>
 
 <template>
-  <div class="leftSideBar">
+  <header class="header">
+    <span class="headerLeft">Logo</span>
+    <span class="titlesite">NLP Tasks</span>
+    <span class="headerRight">X</span>
+  </header>
+  <div class="leftSideBar" id="sidebar">
     <router-link to="/auth">
       <div class="circle">
           A
@@ -29,6 +34,11 @@ import { RouterView } from 'vue-router'
 </template>
 <script>
 export default {
+  // methods : {
+  //   toggleSidebar() {
+  //     document.getElementById('sidebar').style.width = '200px'
+  //   }
+  // },
   beforeMount() {
     this.$store.commit('getAccessToken')
   }
@@ -46,19 +56,48 @@ export default {
 body {
   margin: 0;
   padding: 0;
+  background-color: #efede6;
+}
+.header {
+  position: sticky;
+  top: 0;
+  right: 90px;
+  left: 0;
+  background: #fefff9;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 80px;
+  z-index: 100;
+  width: 100%;
+  border-bottom: 1px solid #dfdfdf;
+}
+.headerLeft {
+  text-align: left;
+  margin-left: 50px;
+}
+.headerRight {
+  margin-right: 50px;
+  width: 115px;
+  text-align: right;
+}
+
+.titlesite {
+  margin-left: 70px;
 }
 .leftSideBar {
   position: fixed;
-  top: 0;
+  top: 80px;
   right: 0;
   bottom: 0;
-  background-color: #d0f9da;
+  background-color: #fefff9;
   width: 50px;
   display: flex;
   flex-direction: column;
-  padding: 50px 10px;
-  align-items: center;
-  border: 1px solid #89db82;
+  padding: 50px 20px;
+  align-items: flex-end;
+  border: 1px solid #dfdfdf;
+  z-index: 100;
 }
 .circle {
   width: 50px;

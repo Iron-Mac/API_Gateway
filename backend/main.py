@@ -2,7 +2,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database import initialize_database, engine
 from sqladmin import Admin
-from routes import authentication, comunity_modules, main_modules, mock, admin_works
+from jdatetime import set_locale
+from routes import authentication, comunity_modules, mock, admin_works
 from routes.admin_models import ModuleAdmin, UserAdmin, UserModuleAdmin
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
@@ -10,6 +11,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 app = FastAPI()
 admin = Admin(app, engine)
 initialize_database()
+set_locale("fa_IR")
 
 origins = [
     "http://localhost:8080",
@@ -18,18 +20,17 @@ origins = [
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 
-app.include_router(authentication.router)
-app.include_router(comunity_modules.router)
+app.include_router(authentication.router, tags=["Authentication"])
+app.include_router(comunity_modules.router, tags=["Community Modules"])
 app.include_router(mock.router)
-app.include_router(admin_works.router)
-# app.include_router(main_modules.router)
+app.include_router(admin_works.router, tags=["Admin Works"])
 
 
 # Admin

@@ -46,3 +46,14 @@ Compile and minifile for production by running:
 ```html
 npm run build
 ```
+
+## Create Admin User
+
+u can create admin user by running python script using:
+
+```html
+cd backend
+python create_admin_user
+```
+
+**Note**: make sure u activate the virtualenv before create admin

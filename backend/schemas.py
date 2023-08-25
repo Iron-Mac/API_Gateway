@@ -70,7 +70,7 @@ class SetRateLimit(BaseModel):
     username: str
     module_id: int
     limit: int
-    expire_time: datetime
+    expire_time: str
 
 
 class LoginInput(BaseModel):

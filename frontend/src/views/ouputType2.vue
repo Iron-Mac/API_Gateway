@@ -15,17 +15,22 @@
         </div>
     </div>
   </div>
+  <msg v-if="showMsg" @endmsg="endmsg" :msg="err"/>
 </template>
 
 <script>
 import axios from 'axios';
+import msg from '../components/msg.vue'
 
 export default {
+    components : {msg},
     data() {
         return {
             inputType : '',
             showTable : false,
-            list : []
+            list : [],
+            showMsg : false,
+            err : ''
         }
     },
     methods : {
@@ -45,9 +50,17 @@ export default {
                 })
                 .catch(err => {
                     console.log(err)
+                    this.err = err.response.data.detail;
+                    this.showMsg = true;
                 })
             }
-        }
+        },
+        endmsg() {
+            this.showMsg = false
+        },
+    },
+    beforeMount() {
+        document.title = "سرویس";
     }
 }
 </script>

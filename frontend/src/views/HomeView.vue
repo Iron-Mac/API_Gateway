@@ -45,15 +45,20 @@
             </div>
         </div>
     </div>
+    <msg v-if="showMsg" @endmsg="endmsg" :msg="err"/>
 </template>
 
 <script>
 import axios from 'axios';
+import msg from '../components/msg.vue'
 
 export default {
+    components : {msg},
     data () {
         return {
-            list : []
+            list : [],
+            showMsg : false,
+            err : ''
         }
     },
     methods : {
@@ -68,9 +73,17 @@ export default {
             })
             .catch(err=> {
                 console.log(err)
+                this.err = err.response.data.detail;
+                this.showMsg = true;
             })
-        }
+        },
+        endmsg() {
+            this.showMsg = false
+        },
 
+    },
+    beforeMount() {
+        document.title = "خلاصه ساز";
     }
 }
 </script>
@@ -99,7 +112,7 @@ export default {
     font-weight:bold;
 }
 .sumHeader button {
-    background: rgb(23, 135, 51);
+    background: #009879;
     color: rgb(255, 255, 255);
     border-radius: 24px;
     padding: 8px 16px;
@@ -141,7 +154,7 @@ export default {
     border-right: 1px solid rgb(199, 199, 199);
 }
 .inputContainer button {
-    background: rgb(23, 135, 51);
+    background: #009879;
     color: rgb(255, 255, 255);
     border-radius: 24px;
     padding: 8px 16px;
@@ -152,6 +165,9 @@ export default {
     align-self: flex-end;
     margin: 10px;
     cursor: pointer;
+}
+.inputContainer button:hover {
+    background: #095143;
 }
 .outputContainer {
     border-radius: 0 0 25px 0;

@@ -10,7 +10,7 @@ import time
 router = APIRouter()
 
 
-@router.post("/mock1")
+@router.post("/mock1", include_in_schema=False)
 def mock(request_data: Input1, user: str = Depends(get_current_user), session: Session = Depends(get_db)):
     user_db = session.query(User).filter_by(username=user).first()
     if not user_db:

@@ -15,7 +15,7 @@ class Module(Base):
     description = Column(String)
     url = Column(String)
     output_type = Column(Integer, CheckConstraint('output_type >= 1 AND output_type <= 3'), nullable=False)
-    creator: Mapped[list["User"]] = relationship("User", secondary="user_module", back_populates="modules")
+    creator: Mapped[list["User"]] = relationship("User", back_populates="modules")
 
     def __repr__(self):
         return f"{self.title} ({self.creator})"
@@ -31,7 +31,7 @@ class User(Base):
     is_admin = Column(Boolean, default=False)
     is_registerer = Column(Boolean, default=False)
     is_verified = Column(Boolean, default=False)
-    modules: Mapped[list["Module"]] = relationship("Module", secondary="user_module", back_populates="creator")
+    modules: Mapped[list["Module"]] = relationship("Module", back_populates="creator")
 
     def __repr__(self):
         return f"{self.username} ({self.phone_number})"
