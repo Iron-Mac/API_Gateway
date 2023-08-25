@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from database import initialize_database, engine
 from sqladmin import Admin
 from routes import authentication, comunity_modules, main_modules, mock
-from routes.admin_models import ModuleAdmin, UserAdmin
+from routes.admin_models import ModuleAdmin, UserAdmin, UserModuleAdmin
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
@@ -35,3 +35,4 @@ app.include_router(mock.router)
 
 admin.add_view(UserAdmin)
 admin.add_view(ModuleAdmin)
+admin.add_view(UserModuleAdmin)

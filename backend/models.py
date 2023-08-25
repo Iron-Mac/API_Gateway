@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, Float, DateTime, CheckConstraint
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, Mapped
 import time
 
 Base = declarative_base()
@@ -14,8 +14,11 @@ class Module(Base):
     title = Column(String, index=True)
     description = Column(String)
     url = Column(String)
-    output_type = Column(Integer, CheckConstraint('output_type >= 1 AND output_type <= 2'), nullable=False)
-    creator = relationship("User", secondary="user_module", back_populates="modules")
+    output_type = Column(Integer, CheckConstraint('output_type >= 1 AND output_type <= 3'), nullable=False)
+    creator: Mapped[list["User"]] = relationship("User", secondary="user_module", back_populates="modules")
+
+    def __repr__(self):
+        return f"{self.title} ({self.creator})"
 
 
 class User(Base):
@@ -28,7 +31,10 @@ class User(Base):
     is_admin = Column(Boolean, default=False)
     is_registerer = Column(Boolean, default=False)
     is_verified = Column(Boolean, default=False)
-    modules = relationship("Module", secondary="user_module", back_populates="creator")
+    modules: Mapped[list["Module"]] = relationship("Module", secondary="user_module", back_populates="creator")
+
+    def __repr__(self):
+        return f"{self.username} ({self.phone_number})"
 
 
 class UserModule(Base):

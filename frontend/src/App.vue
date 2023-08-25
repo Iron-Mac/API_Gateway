@@ -19,9 +19,11 @@ import { RouterView } from 'vue-router'
           L
       </div>
     </router-link>
-    <div class="circle">
-      X
-    </div>
+    <router-link to="/registerModule">
+      <div class="circle">
+        X
+      </div>
+    </router-link>
   </div>
   <RouterView />
 </template>

@@ -47,8 +47,8 @@ class CreateModule(BaseModel):
 
     @validator("output_type")
     def validate_output_type(cls, value):
-        if value not in [1, 2]:
-            raise ValueError("Output type must be 1 or 2")
+        if value not in [1, 2, 3]:
+            raise ValueError("Output type must be 1 or 2 or 3")
         return value
 
 

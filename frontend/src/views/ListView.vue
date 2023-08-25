@@ -1,6 +1,6 @@
 <template>
   <div class="listContainer">
-    <div class="itemContainer" v-for="item,index in list" :key="index">
+    <div class="itemContainer" v-for="item,index in list" :key="index" @click="redirectTo(item)">
         <span class="itemLeft">{{item.title}}</span>
         <span class="itemMid">{{item.url}}</span>
         <span class="itemRight">{{item.description}}</span>
@@ -18,8 +18,20 @@ export default {
             user : ''
         }
     },
+    methods : {
+        redirectTo(item) {
+            if (item["output_type"] == 1) {
+                window.location.href = "http://localhost:5173/"
+            } else if (item["output_type"] == 2) {
+                window.location.href = `http://localhost:5173/output3/${item["id"]}`
+            } else if (item["output_type"] == 3) {
+                window.location.href = `http://localhost:5173/output2/${item["id"]}`
+            }
+        }
+    },
     async beforeMount () {
         console.log(this.$store.state.accessToken)
+        console.log(this.list)
         await axios.get('http://localhost:8000/user-modules', {headers : {
             Authorization : `Bearer ${this.$store.state.accessToken}`
         }})
