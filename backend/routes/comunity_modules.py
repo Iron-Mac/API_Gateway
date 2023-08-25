@@ -3,9 +3,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from database import get_db
 import requests
-from security import get_current_user, get_admin_user
+from security import get_current_user
 from models import User, Module, UserModule
-from schemas import ModuleRequest, SetRateLimit, AddModuleToUser, CreateModule, ModuleDeleteRequest
+from schemas import ModuleRequest, CreateModule
 from utils.regex_controller import is_valid_url
 import time
 
@@ -39,7 +39,7 @@ def process_module(request_data: ModuleRequest, user: str = Depends(get_current_
             raise HTTPException(status_code=403, detail="زمان اعتبار ماژول منقضی شده است")
         
         if user_module.tokens <= 0:
-            raise HTTPException(status_code=429, detail="محدودیت نرخ برای این ماژول تجاوز شده است. لطفاً بعداً دوباره امتحان کنید.")
+            raise HTTPException(status_code=429, detail="نرخ محدودیت برای این ماژول تجاوز شده است. لطفاً بعداً دوباره امتحان کنید.")
 
         user_module.tokens -= 1
         session.commit()
@@ -92,82 +92,23 @@ def process_module(request_data: ModuleRequest, user: str = Depends(get_current_
         return {"error": error_message}
 
 
-@router.post("/set-rate-limit")
-def set_rate_limit(rate_limit_data: SetRateLimit, admin_user: str = Depends(get_admin_user), session: Session = Depends(get_db)):
-
-    target_user = session.query(User).filter_by(username=rate_limit_data.username).first()
-    if not target_user:
-        raise HTTPException(status_code=404, detail="کاربر پیدا نشد")
-
-    module = session.query(Module).filter_by(id=rate_limit_data.module_id).first()
-    if not module:
-        raise HTTPException(status_code=404, detail="ماژول پیدا نشد")
-
-    if rate_limit_data.expire_time < datetime.now():
-        raise HTTPException(status_code=400, detail="زمان انقضا باید در آینده باشد")
-
-    # Check if the module is already associated with the target user
-    if module not in target_user.modules:
-        target_user.modules.append(module)
-        session.commit()
-    user_module = session.query(UserModule).filter_by(user_id=target_user.id, module_id=module.id).first()
-
-    if not user_module:
-        new_user_module = UserModule(
-            user_id=target_user.id,
-            module_id=module.id,
-            limit=rate_limit_data.limit,
-            tokens=rate_limit_data.limit,
-            expire_time=rate_limit_data.expire_time
-        )
-        session.add(new_user_module)
-        session.commit()
-    else:
-        user_module.limit = rate_limit_data.limit
-        user_module.tokens = rate_limit_data.limit
-        user_module.expire_time = rate_limit_data.expire_time
-        session.commit()
-
-    return {"message": "محدودیت نرخ با موفقیت بروزرسانی شد"}
-
-
-# Example of adding a module to a user's list of modules
-@router.post("/add-module-to-user")
-def add_module_to_user(module_data: AddModuleToUser, admin_user: str = Depends(get_current_user), session: Session = Depends(get_db)):
-    admin_db = session.query(User).filter_by(username=admin_user).first()
-    if not admin_db or not admin_db.is_admin:
-        raise HTTPException(status_code=401, detail="Access denied")
-
-    user_db = session.query(User).filter_by(username=module_data.username).first()
-    if not user_db:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    module = session.query(Module).filter_by(id=module_data.module_id).first()
-    if not module:
-        raise HTTPException(status_code=404, detail="Module not found")
-
-    # Add the module to the user's list of modules
-    user_db.modules.append(module)
-
-    session.commit()
-
-    return {"message": "Module added to user successfully"}
-
-
 @router.post("/create-module")
 def create_module(module_data: CreateModule, user: str = Depends(get_current_user), session: Session = Depends(get_db)):
     user_db = session.query(User).filter_by(username=user).first()
     if not user_db:
-        raise HTTPException(status_code=401, detail="Invalid user")
+        raise HTTPException(status_code=404, detail="کاربر پیدا نشد")
+
+    if not user_db.is_registerer:
+        raise HTTPException(status_code=401, detail="کاربر اجازه ی ثبت ندارد")
 
     # Check if the URL is a valid URL
     if not is_valid_url(module_data.url):
-        raise HTTPException(status_code=400, detail="Invalid URL")
+        raise HTTPException(status_code=400, detail="URL نامعتبر است")
 
     # Check if the URL already exists in the database
     existing_module = session.query(Module).filter_by(url=module_data.url).first()
     if existing_module:
-        raise HTTPException(status_code=400, detail="URL already exists")
+        raise HTTPException(status_code=400, detail="URL از قبل وجود دارد")
 
     # Create a new module instance and store it in the database
     new_module = Module(
@@ -210,7 +151,7 @@ def create_module(module_data: CreateModule, user: str = Depends(get_current_use
 def get_user_modules(user: str = Depends(get_current_user), session: Session = Depends(get_db)):
     user_db = session.query(User).filter_by(username=user).first()
     if not user_db:
-        raise HTTPException(status_code=401, detail="Invalid user")
+        raise HTTPException(status_code=404, detail="کاربر پیدا نشد")
 
     user_modules = user_db.modules
     user_models = session.query(UserModule).filter_by(user_id=user_db.id).all()
@@ -219,27 +160,3 @@ def get_user_modules(user: str = Depends(get_current_user), session: Session = D
     user_model_list = [{"user_id": user_model.user_id, "module_id": user_model.module_id, "limit": user_model.limit, "tokens": user_model.tokens, "last_refill": user_model.last_refill} for user_model in user_models]
 
     return {"user": user_db.username, "modules": module_list, "user_models": user_model_list}
-
-
-@router.delete("/delete-module")
-def delete_module(request_data: ModuleDeleteRequest, user: str = Depends(get_current_user), session: Session = Depends(get_db)):
-    user_db = session.query(User).filter_by(username=user).first()
-    if not user_db:
-        raise HTTPException(status_code=401, detail="Invalid user")
-
-    module = session.query(Module).filter_by(id=request_data.module_id).first()
-    if not module:
-        raise HTTPException(status_code=404, detail="Module not found")
-
-    if module.creator_id != user_db.id:
-        raise HTTPException(status_code=403, detail="Access denied to delete module")
-
-    # Delete the module from the user's list of modules
-    user_db.modules.remove(module)
-
-    # Delete the module from the database
-    session.delete(module)
-
-    session.commit()
-
-    return {"message": "Module deleted successfully"}

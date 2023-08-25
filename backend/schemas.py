@@ -97,3 +97,9 @@ class ResetPasswordInput(BaseModel):
     phone_number: str
     verification_code: str
     new_password: str
+
+
+class EditUserRole(BaseModel):
+    username: str
+    is_admin: bool = False
+    is_registerer: bool = False

@@ -9,5 +9,6 @@ class UserAdmin(ModelView, model=User):
 class ModuleAdmin(ModelView, model=Module):
     column_list = [Module.title, Module.url, Module.creator]
 
+
 class UserModuleAdmin(ModelView, model=UserModule):
     column_list = "__all__"

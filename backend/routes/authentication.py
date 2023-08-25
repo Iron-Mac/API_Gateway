@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 import redis
 from sqlalchemy.orm import Session
 from database import get_db, get_redis_connection
-from security import create_tokens, verify_refresh_token, verify_token, get_current_user, get_password_hash, verify_password
+from security import create_tokens, verify_refresh_token, get_password_hash, verify_password
 from models import User
 from schemas import UserInput, ResetPasswordInput, LoginInput, UserCodeVerification
 import random
@@ -21,7 +21,7 @@ def verify_verification_code(redis_conn: redis.StrictRedis, username: str, verif
     redis_key = f"verification_code:{username}"
     cached_verification_code = redis_conn.get(redis_key)
     if not cached_verification_code or cached_verification_code.decode("utf-8") != verification_code:
-        raise HTTPException(status_code=400, detail="Invalid verification code")
+        raise HTTPException(status_code=400, detail="کد وارد شده نادرست است")
 
     # Remove the cached verification code from Redis
     redis_conn.delete(redis_key)
@@ -35,7 +35,7 @@ def generate_verification_code():
 @router.post("/register")
 def register(user_data: UserInput, redis_conn: redis.StrictRedis = Depends(get_redis_connection), session: Session = Depends(get_db)):
     if session.query(User).filter_by(username=user_data.username).first():
-        raise HTTPException(status_code=400, detail="Username already registered")
+        raise HTTPException(status_code=400, detail="کاربری با این نام کاربری از قبل وجود دارد")
 
     hashed_password = get_password_hash(user_data.password)
     user = User(username=user_data.username, password_hash=hashed_password, phone_number=user_data.phone_number)
@@ -56,7 +56,7 @@ def register(user_data: UserInput, redis_conn: redis.StrictRedis = Depends(get_r
 def login(user_data: LoginInput, session: Session = Depends(get_db)):
     user = session.query(User).filter_by(username=user_data.username).first()
     if not user or not verify_password(user_data.password, user.password_hash):
-        raise HTTPException(status_code=401, detail="Invalid username or password")
+        raise HTTPException(status_code=401, detail="نام کاربری یا رمز عبور اشتباه است")
 
     access_token, refresh_token = create_tokens(user_data.username)
     return {"access_token": access_token, "refresh_token": refresh_token}
@@ -73,10 +73,10 @@ def refresh_tokens(refresh_token: str):
 def verify_email(user_input: UserCodeVerification, redis_conn: redis.StrictRedis = Depends(get_redis_connection), session: Session = Depends(get_db)):
     user = session.query(User).filter_by(username=user_input.username).first()
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(status_code=404, detail="کاربر پیدا نشد")
 
     if user.is_verified:
-        raise HTTPException(status_code=400, detail="User is already verified")
+        raise HTTPException(status_code=400, detail="کاربر از قبل فعال است")
 
     verify_verification_code(redis_conn, user.phone_number, user_input.verification_code)
 
@@ -90,7 +90,7 @@ def verify_email(user_input: UserCodeVerification, redis_conn: redis.StrictRedis
 def send_reset_code(username: str, redis_conn: redis.StrictRedis = Depends(get_redis_connection), session: Session = Depends(get_db)):
     user = session.query(User).filter_by(username=username).first()
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(status_code=404, detail="کاربر پیدا نشد")
 
     verification_code = generate_verification_code()
     print(f"\n*******\n   REST CODE: {verification_code}   \n*******\n")
@@ -105,7 +105,7 @@ def send_reset_code(username: str, redis_conn: redis.StrictRedis = Depends(get_r
 def reset_password(user_input: ResetPasswordInput, redis_conn: redis.StrictRedis = Depends(get_redis_connection), session: Session = Depends(get_db)):
     user = session.query(User).filter_by(phone_number=user_input.phone_number).first()
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(status_code=404, detail="کاربر پیدا نشد")
 
     verify_verification_code(redis_conn, user_input.phone_number, user_input.verification_code)
 
