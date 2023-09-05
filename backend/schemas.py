@@ -57,6 +57,19 @@ class ModuleRequest(BaseModel):
     input_data: str
 
 
+class PackageRequest(BaseModel):
+    auth_token: str
+    module_id: int
+    input_data: str
+
+
+class AuthTokenCreate(BaseModel):
+    user_id: int
+    title: str
+    description: str
+    expire_days: int
+
+
 class Input1(BaseModel):
     input_data: str
 

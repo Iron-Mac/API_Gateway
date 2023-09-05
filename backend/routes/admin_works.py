@@ -87,7 +87,7 @@ def set_rate_limit(rate_limit_data: SetRateLimit, admin_user: str = Depends(get_
 
 @router.post("/edit-user-role")
 def edit_user_role(request_data: EditUserRole, user: str = Depends(get_admin_user), session: Session = Depends(get_db)):
-    target_user = session.query(User).filter_by(username=request_data.username).first()
+    target_user = session.query(User).filter_by(username=user).first()
 
     if not target_user:
         raise HTTPException(status_code=404, detail="کاربر پیدا نشد")
