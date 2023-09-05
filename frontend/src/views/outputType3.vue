@@ -2,12 +2,13 @@
 <div class="inputType2Container">
     <div class="out2">
         <div class="out2Header">
-            شناسه ماژول - {{ this.$route.params.out3Code }}
+            نام ماژول - {{ title }}
         </div>
         <textarea type="text" class="inputType2" v-model="inputType"></textarea>
     </div>
     <button @click="post" class="post">ارسال</button>
     <div class="table" v-if="showTable">
+        <p>خروجی ماژول</p>
     <table class="styled-table">
     <thead>
       <tr>
@@ -22,6 +23,10 @@
       </tr>
     </tbody>
     </table>
+    </div>
+    <div class="dis">
+        <p>توضیحات :</p>
+        {{ dis }}
     </div>
 </div>
 <msg v-if="showMsg" @endmsg="endmsg" :msg="err"/>
@@ -39,7 +44,9 @@ export default {
             showTable : false,
             list : [],
             showMsg : false,
-            err : ''
+            err : '',
+            title : '',
+            dis : ''
         }
     },
     methods : {
@@ -68,8 +75,20 @@ export default {
             this.showMsg = false
         },
     },
-    beforeMount() {
-        document.title = "سرویس";
+    async beforeMount() {
+        document.title = "سرویس"; 
+        await axios.get(`http://localhost:8000/retreive-module/${this.$route.params.out3Code}`,{headers : {
+            Authorization : `Bearer ${this.$store.state.accessToken}`
+        }})
+        .then(res => {
+            this.title = res.data.title
+            this.dis = res.data.description
+        })
+        .catch(err => {
+            console.log(err)
+            this.err = err.response.data.detail;
+            this.showMsg = true;
+        })
     }
 }
 </script>
@@ -99,6 +118,19 @@ export default {
     justify-content: center;
     align-items: center;
 }
+.dis {
+    margin-top: 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    width: 70%;
+    margin-bottom: 50px;
+    direction: rtl;
+}
+.dis p {
+    font-weight: bold;
+}
 .post {
     width: 200px;
     height: 45px;
@@ -119,6 +151,10 @@ export default {
     padding: 15px;
     resize: auto;
     max-height: 500px;
+}
+.table p {
+    border-bottom: 1px solid #cfcfcf;
+    text-align: center;
 }
 .styled-table {
     border-collapse: collapse;

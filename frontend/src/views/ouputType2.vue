@@ -2,17 +2,31 @@
   <div class="inputType2Container">
     <div class="out2">
         <div class="out2Header">
-            شناسه ماژول - {{ this.$route.params.out2Code }}
+            نام ماژول - {{ title }}
         </div>
         <textarea type="text" class="inputType2" v-model="inputType"></textarea>
     </div>
     <button @click="post" class="post">ارسال</button>
     <div class="table" v-if="showTable">
-        <div class="row" v-for="index,item in list" :key="index">
-            <span class="num">{{index}}</span>
-            <span>{{item[0]}}</span>
-            <span class="sec">{{item[1]}}</span>
-        </div>
+        <p>خروجی ماژول</p>
+    <table class="styled-table">
+    <thead>
+      <tr>
+        <th class="tdindex">Index</th>
+        <th>Value</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr v-for="index,item in list" :key="index">
+        <td class="tdindex">{{item}}</td>
+        <td>{{index}}</td>
+      </tr>
+    </tbody>
+    </table>
+    </div>
+    <div class="dis">
+        <p>توضیحات :</p>
+        {{ dis }}
     </div>
   </div>
   <msg v-if="showMsg" @endmsg="endmsg" :msg="err"/>
@@ -30,7 +44,9 @@ export default {
             showTable : false,
             list : [],
             showMsg : false,
-            err : ''
+            err : '',
+            title : '',
+            dis : ''
         }
     },
     methods : {
@@ -59,8 +75,20 @@ export default {
             this.showMsg = false
         },
     },
-    beforeMount() {
+    async beforeMount() {
         document.title = "سرویس";
+        await axios.get(`http://localhost:8000/retreive-module/${this.$route.params.out2Code}`,{headers : {
+            Authorization : `Bearer ${this.$store.state.accessToken}`
+        }})
+        .then(res => {
+            this.title = res.data.title
+            this.dis = res.data.description
+        })
+        .catch(err => {
+            console.log(err)
+            this.err = err.response.data.detail;
+            this.showMsg = true;
+        })
     }
 }
 </script>
@@ -73,15 +101,16 @@ export default {
     flex-direction: column;
 }
 .inputType2 {
-    margin:10px auto;
+    margin: 30px auto;
     height: 400px;
     width: 600px;
-    border: 1px solid #353535;
+    border: 1px solid #cfcfcf;
     border-radius: 15px;
     resize: none;
     font-size: 22px;
     padding: 10px;
     outline: none;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
 }
 .out2Header {
     margin-top: 30px;
@@ -89,10 +118,23 @@ export default {
     justify-content: center;
     align-items: center;
 }
+.dis {
+    margin-top: 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    width: 70%;
+    margin-bottom: 50px;
+    direction: rtl;
+}
+.dis p {
+    font-weight: bold;
+}
 .post {
     width: 200px;
     height: 45px;
-    background: #1bb140;
+    background: #009879;
     border-radius: 50px;
     border: none;
     margin-bottom: 30px;
@@ -102,14 +144,49 @@ export default {
     box-shadow: 0 1rem 3rem rgb(0, 0, 0, 0.35);
     cursor: pointer;
 }
-.submit:hover {
-    background-color:#0edd42;
+.post:hover {
+    background-color:#095143;
 }
 .table {
-    border: 1px solid #0edd42;
-    padding: 50px;
+    padding: 15px;
     resize: auto;
     max-height: 500px;
+}
+.table p {
+    border-bottom: 1px solid #cfcfcf;
+    text-align: center;
+}
+.styled-table {
+    border-collapse: collapse;
+    margin: 25px 0;
+    padding: 50px;
+    font-size: 1.4em;
+    max-height: 500px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+}
+.styled-table thead tr {
+    background-color: #009879;
+    color: #ffffff;
+    text-align: left;
+}
+.styled-table th,
+.styled-table td {
+    padding: 15px 70px;
+}
+.styled-table tbody tr {
+    border-bottom: 1px solid #dddddd;
+}
+
+.styled-table tbody tr:nth-of-type(even) {
+    background-color: #f3f3f3;
+}
+
+.styled-table tbody tr:last-of-type {
+    border-bottom: 2px solid #009879;
+}
+
+.tdindex{
+    width: 50px !important;
 }
 .row {
     display: flex;
@@ -124,7 +201,7 @@ export default {
 .sec {
     width: 250px !important;
 }
-.num {
-    width: 50px !important;
-}
+  .num {
+      width: 50px !important;
+  }
 </style>

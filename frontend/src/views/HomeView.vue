@@ -64,18 +64,38 @@ export default {
     methods : {
         async summarize() {
             let outputElement = document.getElementById('output')
-            await axios.post('http://localhost:8000/mock1',{'input_data' : document.getElementById('input').value},{ headers : {
-                Authorization : `Bearer ${this.$store.state.accessToken}`
+            if(this.$route.params.out1Code == 'defult') {
+                await axios.post('http://localhost:8000/mock1',{'input_data' : document.getElementById('input').value},{ headers : {
+                    Authorization : `Bearer ${this.$store.state.accessToken}`
+                }
+                })
+                .then(res=> {
+                    outputElement.value = res.data.result
+                })
+                .catch(err=> {
+                    console.log(err)
+                    this.err = err.response.data.detail;
+                    this.showMsg = true;
+                })
+            } else {
+                let outputElement = document.getElementById('output')
+                const data = {
+                    "module_id": this.$route.params.out1Code,
+                    "input_data": document.getElementById('input').value
+                }
+                await axios.post('http://localhost:8000/process-module',data,{headers : {
+                    Authorization : `Bearer ${this.$store.state.accessToken}`
+                }})
+                .then(res => {
+                    outputElement.value = res.data.result
+                    console.log(res)
+                })
+                .catch(err => {
+                    console.log(err)
+                    this.err = err.response.data.detail;
+                    this.showMsg = true;
+                })
             }
-            })
-            .then(res=> {
-                outputElement.value = res.data.result
-            })
-            .catch(err=> {
-                console.log(err)
-                this.err = err.response.data.detail;
-                this.showMsg = true;
-            })
         },
         endmsg() {
             this.showMsg = false

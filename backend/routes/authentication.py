@@ -115,7 +115,7 @@ def reset_password(user_input: ResetPasswordInput, redis_conn: redis.StrictRedis
 
 @router.get("/retreive-user")
 def get_user_data(user: str = Depends(get_current_user), session: Session = Depends(get_db)):
-    user = session.query(User).filter_by(username=user.username).first()
+    user = session.query(User).filter_by(username=user).first()
     if not user:
         raise HTTPException(status_code=404, detail="کاربر پیدا نشد")
 

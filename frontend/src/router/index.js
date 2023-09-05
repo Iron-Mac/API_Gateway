@@ -5,14 +5,22 @@ import LoginView from '../views/LoginView.vue';
 import outputType2 from '../views/ouputType2.vue';
 import outputType3 from '../views/outputType3.vue';
 import registerModule from '../views/registerModule.vue';
+import admin from '../views/Admin.vue';
+import editRule from '../views/EditRule.vue';
+import addToken from '../views/AddToken.vue';
+import tokenList from '../views/TokenList.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
-      path: '/',
+      path: '/:out1Code',
       name: 'home',
       component: HomeView
+    },
+    { 
+      path: '/', 
+      redirect: '/defult' 
     },
     {
       path: '/list',
@@ -38,6 +46,26 @@ const router = createRouter({
       path: '/registerModule',
       name: 'registerModule',
       component: registerModule
+    },
+    {
+      path: '/admin',
+      name: 'admin',
+      component: admin
+    },
+    {
+      path: '/editRule/:editID',
+      name: 'editRule',
+      component: editRule
+    },
+    {
+      path: '/addToken',
+      name: 'addToken',
+      component: addToken
+    },
+    {
+      path: '/tokenList',
+      name: 'tokenList',
+      component: tokenList
     }
   ]
 })
