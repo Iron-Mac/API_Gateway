@@ -15,5 +15,5 @@ RUN npm run build
 EXPOSE 8080
 
 # Serve the Vue app with a simple HTTP server
-CMD ["npm", "run", "dev"]
+CMD ["npm", "run", "serve"]
 

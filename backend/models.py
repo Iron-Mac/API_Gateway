@@ -32,9 +32,25 @@ class User(Base):
     is_registerer = Column(Boolean, default=False)
     is_verified = Column(Boolean, default=False)
     modules: Mapped[list["Module"]] = relationship("Module", back_populates="creator")
+    personal_tokens = relationship("AuthToken", back_populates="user")
 
     def __repr__(self):
         return f"{self.username} ({self.phone_number})"
+
+
+class AuthToken(Base):
+    __tablename__ = "auth_token"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey('users.id'))
+    user = relationship("User", back_populates="personal_tokens")
+    title = Column(String, index=True)
+    description = Column(String)
+    token = Column(String)
+    expire_date = Column(DateTime)
+
+    def __repr__(self):
+        return f"{self.title} ({self.user_id})"
 
 
 class UserModule(Base):

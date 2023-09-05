@@ -104,6 +104,7 @@ export default {
             await axios.post('http://localhost:8000/verify-user',data)
             .then(res => {
                 console.log(res.data);
+                this.submitAuth();
                 window.location.href = "http://localhost:5173/";
             })
             .catch(err=> {
