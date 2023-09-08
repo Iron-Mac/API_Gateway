@@ -1,11 +1,11 @@
 <template>
-  <h1 class="listh1">ویرایش کاربر - {{ userNmae }}</h1>
+  <h1 class="listh1">{{ userNmae }} - ویرایش کاربر </h1>
   <div class="listContainer">
     <div class="moduleContainer">
         <div class="itemContainer" v-for="item,index in list" :key="index">
             <span class="itemLeft">{{item.title}}</span>
-            <span class="itemMid">{{item.url}}</span>
-            <span class="itemRight">{{item.description}}</span>
+            <span class="itemMid">{{item.url.slice(0,20)}}</span>
+            <span class="itemRight">{{item.description.slice(0,10)}}</span>
             <span class="itemRR" @click="addModule(item)">+</span>
             <!-- <span class="itemRR" @click="removeModule(item)" v-if="!showPlus">-</span> -->
         </div>
@@ -25,7 +25,7 @@
                 <label>اجازه ثبت ماژول</label>
                 <input type="checkbox" v-model="isRegister">
             </div>
-            <button @click="submit" class="submit">ثبت</button>
+            <button @click="submit" class="submited">ثبت</button>
         </div>
     </div>
   </div>
@@ -105,7 +105,7 @@ export default {
         }
     },
     async beforeMount () {
-        document.title = "خانه";
+        document.title = "ویرایش کاربر";
         await axios.get('http://localhost:8000/all-module-list', {headers : {
             Authorization : `Bearer ${this.$store.state.accessToken}`
         }})
@@ -120,8 +120,11 @@ export default {
             this.err = err.response.data.detail;
             this.showMsg = true;
         })
-
-        await axios.get('http://localhost:8000/retreive-user', {headers : {
+        console.log(this.editID )
+        const data = {
+                "user_id": this.editID 
+            }
+        await axios.post('http://localhost:8000/retreive-user-by-id', data, {headers : {
             Authorization : `Bearer ${this.$store.state.accessToken}`
         }})
         .then (res => {
@@ -149,7 +152,6 @@ export default {
 }
 .listContainer {
     display: flex;
-    direction: rtl;
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
@@ -162,7 +164,7 @@ export default {
 }
 .moduleContainer {
     display: flex;
-    direction: rtl;
+    direction: ltr;
     flex-direction: column;
     align-items: flex-start;
     justify-content: flex-start;
@@ -171,12 +173,14 @@ export default {
     border-radius: 13px;
     width: 50%;
     height: 100px;
-    resize: horizontal;
+    overflow: auto;
+    overflow-y: auto;
 }
 .itemContainer {
     margin-bottom: 15px;
     display: flex;
-    justify-content: flex-start;
+    direction: rtl;
+    justify-content: space-between;
     align-items: center;
     width: 90%;
     margin: 5px auto;
@@ -203,6 +207,7 @@ export default {
     margin: 0;
     margin-right: 20px;
     font-size: 12px;
+    flex-grow: 1;
 }
 .itemRight {
     color: #4b4b4b;
@@ -213,7 +218,8 @@ export default {
     justify-self: flex-end;
     font-size: 26px;
     cursor: pointer;
-    margin-right: 50px;
+    margin-right: 10px;
+    margin-left: 5px;
 }
 .display {
     position: fixed;
@@ -228,6 +234,19 @@ export default {
     z-index: 5;
     z-index: 99;
 }
+.submited{
+    width: 135px;
+    height: 45px;
+    background: #009879;
+    border-radius: 50px;
+    border: none;
+    margin: 28px 105px;
+    color: white;
+    font-weight: bold;
+    font-size: 22px;
+    box-shadow: 0 1rem 3rem rgb(0, 0, 0, 0.35);
+    cursor: pointer;
+}
 .popup {
     z-index: 99;
     background: #fff;
@@ -239,6 +258,6 @@ export default {
     flex-direction: column;
 }
 .popup button {
-    margin-top: 10px;
+    margin-top: 30px;
 }
 </style>

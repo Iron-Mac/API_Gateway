@@ -3,21 +3,21 @@
         <div class="sumContainer">
             <div class="summarizerSection">
                 <div class="sumHeader">
-                    خلاصه ساز متن
+                    {{ this.$route.params.out1Code == 'defult' ? 'خلاسه ساز متن' : 'کامیونیتی ماژول'}}
                 </div>
                 <div class="sumBody">
                     <div class="inputContainer">
                         <textarea name="input" id="input" placeholder="متن مورد نظر را وارد کنید"></textarea>
                         <button @click="summarize">خلاصه‌ نویسی</button>
                     </div>
-                    <div class="outputContainer">
-                        <textarea name="output" id="output" disabled>نتیجه</textarea>
-                        <p>تعداد: 0 جمله - 0 کلمه</p>
+                    <div class="outputContainer" @click="copy">
+                        <textarea name="output" id="output" disabled >نتیجه</textarea>
+                        <p>{{ `تعداد: ${jomle} جمله - ${klme} کلمه`}}</p>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="introContainer">
+        <div class="introContainer" v-if="isHome">
             <div class="introSection">
                 <p>معرفی سامانه خلاصه‌سازی
 
@@ -44,6 +44,10 @@
                 </div>
             </div>
         </div>
+        <div class="dis" v-if="!isHome">
+            <p>توضیحات :</p>
+            {{ dis }}
+        </div>
     </div>
     <msg v-if="showMsg" @endmsg="endmsg" :msg="err"/>
 </template>
@@ -58,24 +62,59 @@ export default {
         return {
             list : [],
             showMsg : false,
-            err : ''
+            err : '',
+            isHome : this.$route.params.out1Code == 'defult' ? true : false,
+            klme : 0,
+            jomle : 0
         }
     },
     methods : {
+        copy() {
+            console.log('m')
+            var r = document.createRange();
+            r.selectNode(document.getElementById("output"));
+            window.getSelection().removeAllRanges();
+            window.getSelection().addRange(r);
+            document.execCommand('copy');
+            window.getSelection().removeAllRanges();
+        },
         async summarize() {
             let outputElement = document.getElementById('output')
-            await axios.post('http://localhost:8000/mock1',{'input_data' : document.getElementById('input').value},{ headers : {
-                Authorization : `Bearer ${this.$store.state.accessToken}`
+            if(this.$route.params.out1Code == 'defult') {
+                await axios.post('http://localhost:8000/mock1',{'input_data' : document.getElementById('input').value},{ headers : {
+                    Authorization : `Bearer ${this.$store.state.accessToken}`
+                }
+                })
+                .then(res=> {
+                    outputElement.value = res.data.result
+                    this.klme = res.data.result.split(" ").length;
+                    this.jomle = res.data.result.split(".").length;
+                })
+                .catch(err=> {
+                    console.log(err)
+                    this.err = err.response.data.detail;
+                    this.showMsg = true;
+                })
+            } else {
+                let outputElement = document.getElementById('output')
+                const data = {
+                    "module_id": this.$route.params.out1Code,
+                    "input_data": document.getElementById('input').value
+                }
+                await axios.post('http://localhost:8000/process-module',data,{headers : {
+                    Authorization : `Bearer ${this.$store.state.accessToken}`
+                }})
+                .then(res => {
+                    outputElement.value = res.data.result;
+                    this.dis = res.data.description;
+                    console.log(res)
+                })
+                .catch(err => {
+                    console.log(err)
+                    this.err = err.response.data.detail;
+                    this.showMsg = true;
+                })
             }
-            })
-            .then(res=> {
-                outputElement.value = res.data.result
-            })
-            .catch(err=> {
-                console.log(err)
-                this.err = err.response.data.detail;
-                this.showMsg = true;
-            })
         },
         endmsg() {
             this.showMsg = false
@@ -209,5 +248,17 @@ export default {
 }
 .sec {
     width: 350px !important;
+}
+.dis {
+    margin-top: 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    margin-bottom: 50px;
+    direction: rtl;
+}
+.dis p {
+    font-weight: bold;
 }
 </style>

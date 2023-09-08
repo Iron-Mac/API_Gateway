@@ -1,20 +1,15 @@
 <template>
-    <h1 class="listh1">لیست سرویس ها</h1>
+    <h1 class="listh1">
+        <router-link to="/addToken"><span>افزودن</span></router-link>
+        لیست توکن ها 
+    </h1>
   <div class="listContainer">
     <p v-if="!list.length">موردی برای نمایش وجود ندارد</p>
-    <div class="itemContainer" v-for="item,index in list" :key="index" @click.self="redirectTo(item)">
-        <span class="itemRR" @click="togglePopup">+</span>
+    <div class="itemContainer" v-for="item,index in list" :key="index">
         <div class="itemContent">
             <span class="itemLeft">{{item.title}}</span>
-            <span class="itemMid">{{item.description.slice(0,50)}}</span>
-            <span class="itemRight">{{item["creator_username"]}}</span>
-        </div>
-        <div class="display" v-if="showPopup" @click.self="togglePopup">
-            <div class="popup">
-                <p>تعداد درخواست ارسال شده ( برای امروز ) : {{ userModels.tokens }}</p>
-                <p>تعداد درخواست باقی مانده ( برای امروز ) : {{ userModels.limit }}</p>
-                <p>تاریخ انقضا : {{ userModels['expire_time'] }}</p>
-            </div>
+            <span class="itemMid">{{item["expire_time"].split("T")[0]}}</span>
+            <span class="itemRight">{{item.description}}</span>
         </div>
     </div>
   </div>
@@ -32,40 +27,23 @@ export default {
             list : [],
             user : '',
             userModels : {},
-            showPopup : false,
             showMsg : false,
             err : ''
         }
     },
     methods : {
-        redirectTo(item) {
-            if (item["output_type"] == 1) {
-                window.location.href = `http://localhost:5173/${item["id"]}`
-            } else if (item["output_type"] == 2) {
-                window.location.href = `http://localhost:5173/output3/${item["id"]}`
-            } else if (item["output_type"] == 3) {
-                window.location.href = `http://localhost:5173/output2/${item["id"]}`
-            }
-        },
-        togglePopup() {
-            this.showPopup = !this.showPopup
-        },
         endmsg() {
             this.showMsg = false
-        }
+        },
     },
     async beforeMount () {
-        document.title = "خانه";
-        console.log(this.$store.state.accessToken)
-        console.log(this.list)
-        await axios.get('http://localhost:8000/user-modules', {headers : {
+        document.title = "لیست توکن ها";
+        await axios.get('http://localhost:8000/get_auth_tokens/', {headers : {
             Authorization : `Bearer ${this.$store.state.accessToken}`
         }})
         .then (res => {
             console.log(res.data)
-            this.list = res.data.modules;
-            this.userModels = res.data["user_models"][0]
-            this.user = res.data.user;
+            this.list = res.data["user_tokens"];
         })
         .catch (err => {
             console.log(err)
@@ -82,9 +60,20 @@ export default {
     width: 70%;
     margin: 50px auto;
     margin-top: 50px;
-    text-align: center;
     border-bottom: 1px solid #cecece;
     padding-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+}
+.listh1 span {
+    cursor: pointer;
+    background-color: #0da200;
+    padding: 10px;
+    border-radius: 20px;
+    color: #fff;
+    font-size: 16px;
+    font-weight: normal;
+
 }
 .listContainer {
     display: flex;
@@ -131,7 +120,6 @@ export default {
 .itemMid {
     flex-grow: 1; /* Equal width for all three items */
     padding-right: 30px; /* Add spacing between items */
-    font-size: 12px;
 }
 .itemRight {
     color: #4b4b4b;
