@@ -6,7 +6,10 @@
         </div>
         <textarea type="text" class="inputType2" v-model="inputType"></textarea>
     </div>
-    <button @click="post" class="post">ارسال</button>
+    <button @click="post" class="post" v-if="!isLoading">ارسال</button>
+    <button class="post" disabled v-if="isLoading">
+        <div class="lds-ellipsis"><div></div><div></div><div></div><div></div></div>
+    </button>
     <div class="table" v-if="showTable">
         <p>خروجی ماژول</p>
     <table class="styled-table">
@@ -46,12 +49,14 @@ export default {
             showMsg : false,
             err : '',
             title : '',
-            dis : ''
+            dis : '',
+            isLoading : false
         }
     },
     methods : {
         async post() {
             if (this.inputType) {
+                this.isLoading = true;
                 const data = {
                     "module_id": this.$route.params.out3Code,
                     "input_data": this.inputType
@@ -63,11 +68,13 @@ export default {
                     this.list = res.data['output_list']
                     this.showTable = true;
                     console.log(res)
+                    this.isLoading = false;
                 })
                 .catch(err => {
                     console.log(err)
                     this.err = err.response.data.detail;
                     this.showMsg = true;
+                    this.isLoading = false;
                 })
             }
         },

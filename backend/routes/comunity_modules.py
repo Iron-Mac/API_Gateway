@@ -180,7 +180,25 @@ def get_user_modules(user: str = Depends(get_current_user), session: Session = D
             "expire_time": formatted_jalali_expire_time
         }
         user_model_list.append(user_model_data)
-    module_list = [{"id": module.id, "title": module.title, "description": module.description, "url": module.url, "output_type": module.output_type} for module in user_modules]
+
+    module_list = []
+
+    for module in user_modules:
+        # Fetch the creator_user for the current module
+        creator_user = session.query(User).filter_by(id=module.creator_id).first()
+        
+        # Include the creator_username in the dictionary
+        module_dict = {
+            "id": module.id,
+            "creator_id": module.creator_id,
+            "creator_username": creator_user.username if creator_user else None,
+            "title": module.title,
+            "description": module.description,
+            "url": module.url,
+            "output_type": module.output_type
+        }
+        
+        module_list.append(module_dict)
 
     return {"user": user_db.username, "modules": module_list, "user_models": user_model_list}
 

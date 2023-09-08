@@ -1,5 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 import redis
+import logging
+from utils.custom_log_message import custom_log_message
 from sqlalchemy.orm import Session
 from database import get_db, get_redis_connection
 from security import create_tokens, get_current_user, verify_refresh_token, get_password_hash, verify_password
@@ -8,6 +10,8 @@ from schemas import UserInput, ResetPasswordInput, LoginInput, UserCodeVerificat
 import random
 
 router = APIRouter()
+
+auth_logger = logging.getLogger("authentication")
 
 
 # Store the verification code in Redis
@@ -21,6 +25,8 @@ def verify_verification_code(redis_conn: redis.StrictRedis, username: str, verif
     redis_key = f"verification_code:{username}"
     cached_verification_code = redis_conn.get(redis_key)
     if not cached_verification_code or cached_verification_code.decode("utf-8") != verification_code:
+        log_msg = custom_log_message(username, 400, "کد وارد شده نادرست است")
+        auth_logger.error(log_msg)
         raise HTTPException(status_code=400, detail="کد وارد شده نادرست است")
 
 
@@ -32,6 +38,8 @@ def generate_verification_code():
 @router.post("/register")
 def register(user_data: UserInput, redis_conn: redis.StrictRedis = Depends(get_redis_connection), session: Session = Depends(get_db)):
     if session.query(User).filter_by(username=user_data.username).first():
+        log_msg = custom_log_message(user_data.username, 400, "کاربری با این نام کاربری از قبل وجود دارد")
+        auth_logger.error(log_msg)
         raise HTTPException(status_code=400, detail="کاربری با این نام کاربری از قبل وجود دارد")
 
     hashed_password = get_password_hash(user_data.password)
@@ -45,6 +53,8 @@ def register(user_data: UserInput, redis_conn: redis.StrictRedis = Depends(get_r
     user.modules = []
 
     session.commit()
+    log_msg = custom_log_message(user_data.username, 200, f"User registered successfully verification code sent to {user.phone_number}")
+    auth_logger.info(log_msg)
     return {"message": f"User registered successfully\nverification code sent to {user.phone_number}"}
 
 
@@ -53,6 +63,8 @@ def register(user_data: UserInput, redis_conn: redis.StrictRedis = Depends(get_r
 def login(user_data: LoginInput, session: Session = Depends(get_db)):
     user = session.query(User).filter_by(username=user_data.username).first()
     if not user or not verify_password(user_data.password, user.password_hash):
+        log_msg = custom_log_message(user_data.username, 401, "نام کاربری یا رمز عبور اشتباه است")
+        auth_logger.error(log_msg)
         raise HTTPException(status_code=401, detail="نام کاربری یا رمز عبور اشتباه است")
 
     access_token, refresh_token = create_tokens(user_data.username)

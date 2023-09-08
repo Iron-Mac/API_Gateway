@@ -6,7 +6,7 @@ import redis
 from database import get_db, get_redis_connection
 from security import get_current_user, get_admin_user
 from models import User, Module, UserModule
-from schemas import SetRateLimit, ModuleDeleteRequest, EditUserRole
+from schemas import SetRateLimit, ModuleDeleteRequest, EditUserRole, RetriveUserByID
 
 router = APIRouter(dependencies=[Depends(get_admin_user)])
 
@@ -172,3 +172,18 @@ def get_all_users(admin_user: str = Depends(get_admin_user), session: Session = 
     redis_conn.setex(cache_key, ttl, serialized_users)
 
     return users
+
+
+@router.post("/retreive-user-by-id")
+def get_user_by_id(admin_req: RetriveUserByID, user: str = Depends(get_admin_user), session: Session = Depends(get_db)):
+    user = session.query(User).filter_by(id=admin_req.user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="کاربر پیدا نشد")
+
+    return {
+        "id": user.id,
+        "username": user.username,
+        "phone_number": user.phone_number,
+        "admin": user.is_admin,
+        "registerer": user.is_registerer
+    }

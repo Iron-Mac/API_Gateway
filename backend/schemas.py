@@ -115,3 +115,7 @@ class EditUserRole(BaseModel):
     username: str
     is_admin: bool = False
     is_registerer: bool = False
+
+
+class RetriveUserByID(BaseModel):
+    user_id: int

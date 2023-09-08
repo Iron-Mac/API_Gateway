@@ -106,11 +106,31 @@ def process_module(request_data: PackageRequest, session: Session = Depends(get_
         raise HTTPException(status_code=400, detail=error_message)
 
 
-@router.post("/auth_tokens/")
-def create_auth_token(token_data: AuthTokenCreate, user: str = Depends(get_current_user), db: Session = Depends(get_db)):
-    ruser = db.query(User).filter(User.username == user).first()
+@router.get("/get_auth_tokens/")
+def get_auth_token(user: str = Depends(get_current_user), session: Session = Depends(get_db)):
+    user_db = session.query(User).filter_by(username=user).first()
+    if not user_db:
+        raise HTTPException(status_code=404, detail="کاربر پیدا نشد")
+    user_tokens = user_db.personal_tokens
+    print(user_tokens)
+    user_token_list = []
+    for user_token in user_tokens:
+        user_token_data = {
+            "user_id": user_token.user_id,
+            "id": user_token.id,
+            "title": user_token.title,
+            "description": user_token.description,
+            "expire_time": user_token.expire_date
+        }
+        user_token_list.append(user_token_data)
+    return {"user_tokens": user_token_list}
+
+
+@router.post("/create_auth_tokens/")
+def create_auth_token(token_data: AuthTokenCreate, user: str = Depends(get_current_user), session: Session = Depends(get_db)):
+    ruser = session.query(User).filter(User.username == user).first()
     if ruser is None:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(status_code=401, detail="کاربر نامعتبر است")
 
     expire_days = token_data.expire_days
     expire_date = datetime.now() + timedelta(days=expire_days)
@@ -124,9 +144,9 @@ def create_auth_token(token_data: AuthTokenCreate, user: str = Depends(get_curre
         token=random_token,
         expire_date=expire_date
     )
-    db.add(db_token)
-    db.commit()
-    db.refresh(db_token)
+    session.add(db_token)
+    session.commit()
+    session.refresh(db_token)
     return db_token
 
 

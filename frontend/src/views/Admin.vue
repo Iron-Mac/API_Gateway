@@ -32,6 +32,7 @@ export default {
         },
         redirectTo(item) {
             window.location.href = `http://localhost:5173/editRule/${item.id}`
+            console.log(item.id)
         }
     },
     async beforeMount () {
