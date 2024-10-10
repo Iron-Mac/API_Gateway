@@ -2,13 +2,14 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from models import Base
 import redis
+import os
 
 # Replace these values with your Redis server details
-REDIS_HOST = "localhost"
-REDIS_PORT = 6379
+REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')
+REDIS_PORT = int(os.getenv('REDIS_PORT', 6379))
 REDIS_DB = 0
 
-DATABASE_URL = "sqlite:///./test.db"  # SQLite database URL
+DATABASE_URL = "sqlite:///./data/test.db"
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

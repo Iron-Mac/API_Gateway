@@ -7,7 +7,7 @@ import { RouterView } from 'vue-router'
     <span class="headerLeft"><img src="./assets/nlp.png" alt=""></span>
     <span class="titlesite">NLP Tasks</span>
     <router-link to="/auth">
-      <span v-if="this.$store.state.accessToken" class="usrname">{{ userName }}</span>
+      <span v-if="$store.state.accessToken" class="usrname">{{ userName }}</span>
       <span class="headerRight"><img src="./assets/user.png" alt=""></span>
     </router-link>
   </header>
@@ -22,7 +22,7 @@ import { RouterView } from 'vue-router'
           <img src="./assets/compose.png" alt="">
       </div>
     </router-link>
-    <router-link to="/list" v-if="this.$store.state.accessToken">
+    <router-link to="/list" v-if="$store.state.accessToken">
       <div class="circle" title="لیست سرویس ها">
         <img src="./assets/list.png" alt="">
       </div>

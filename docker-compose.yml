@@ -3,17 +3,33 @@ services:
   backend:
     build:
       context: ./backend
+    volumes:
+      - ./backend:/app
+      - ./data:/app/data
     ports:
       - "8000:8000"
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
     depends_on:
       - redis
   frontend:
     build:
       context: ./frontend
     ports:
-      - "4173:4173"
-      - "8080:80"
+      - "4173:80"
   redis:
     image: redis:latest
     ports:
       - "6379:6379"
+  admin:
+    build:
+      context: ./backend
+    volumes:
+      - ./backend:/app
+      - ./data:/app/data
+    command: ["python3", "/app/create_admin_user.py"]
+    stdin_open: true
+    tty: true
+    depends_on:
+      - backend
